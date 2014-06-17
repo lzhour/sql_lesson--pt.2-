@@ -21,21 +21,46 @@ def get_project_by_title(title):
     query = """SELECT title, description FROM Projects WHERE title = ?"""
     DB.execute(query, (title,))
     row = DB.fetchone()
-    print """\
+    print """
 Title: %s
 Description: %s""" % (row[0], row[1])
 
+def get_grade(student_github, project_title):
+    query = """SELECT student_github, project_title, grade FROM Grades WHERE student_github = ? AND project_title = ?"""
+    DB.execute(query,(student_github, project_title))
+    row = DB.fetchone()
+    print """%s grade on %s is %d""" % (row[0], row[1], row[2])
+
 def add_project(title, description, max_grade):
-    query = """INSERT into Projects values (?, ?, ?)"""
+    query = """INSERT into Projects (title, description, max_grade) values (?, ?, ?)"""
+    max_grade = int(max_grade)
     DB.execute(query, (title, description, max_grade))
     CONN.commit()
-    print "Succesfully added new project: %s %s %r" % (title, description, max_grade)
+    print "Succesfully added new project: %s %s %d" % (title, description, max_grade)
+
+def add_grade(student_github, project_title, grade):
+    query = """INSERT into Grades (student_github, project_title, grade) values (?, ?, ?)"""
+    grade = int(grade)
+    DB.execute(query, (student_github, project_title, grade))
+    CONN.commit()
+    print "Successfully added a grade of %d to %s on %s" % (grade, student_github, project_title)
+
+def show_grades(student_github):
+    query = """ SELECT student_github, project_title, grade FROM Grades WHERE student_github = ?"""
+    DB.execute(query, (student_github,))
+    grade_list = DB.fetchall()
+    print """Student github: %s""" % student_github
+    for entry in grade_list:
+        print"""
+        Project Title: %s
+        Grade: %d""" % (entry[1], entry[2])
 
 
 def connect_to_db():
     global DB, CONN
     CONN = sqlite3.connect("hackbright.db")
     DB = CONN.cursor()
+
 def main():
     connect_to_db()
     command = None
@@ -53,6 +78,12 @@ def main():
             get_project_by_title(*args)
         elif command == "add_project":
             add_project(*args)
+        elif command == "get_grade":
+            get_grade (*args)
+        elif command == "add_grade":
+            add_grade(*args)
+        elif command == "show_grades":
+            show_grades (*args)
 
     CONN.close()
 
